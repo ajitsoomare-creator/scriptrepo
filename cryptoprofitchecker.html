@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crypto Profit Tracker (Demo)</title>
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#0b1220;
+      color:#e8eefc;
+      margin:0;
+      padding:24px;
+    }
+    .wrap{max-width:900px;margin:0 auto;}
+    .card{
+      background:#121a2b;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      padding:18px;
+      margin-bottom:14px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    h1{font-size:22px;margin:0 0 8px;}
+    .muted{color:#a9b4d0;font-size:13px;}
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+      margin-top:12px;
+    }
+    .stat{
+      background:#0f1626;
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;
+      padding:14px;
+    }
+    .label{font-size:12px;color:#a9b4d0;}
+    .value{font-size:18px;margin-top:6px;}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:10px;
+    }
+    th, td{
+      text-align:left;
+      padding:10px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      font-size:14px;
+    }
+    th{color:#a9b4d0;font-weight:600;}
+    input, select{
+      width:100%;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.12);
+      background:#0f1626;
+      color:#e8eefc;
+      outline:none;
+    }
+    button{
+      padding:10px 12px;
+      border-radius:10px;
+      border:none;
+      cursor:pointer;
+      background:#2b6cff;
+      color:white;
+      font-weight:600;
+    }
+    .row{display:grid;grid-template-columns: 2fr 1fr 1fr 1fr;gap:10px;margin-top:12px;}
+    .footerNote{
+      margin-top:10px;
+      font-size:12px;
+      color:#a9b4d0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Crypto Profit Tracker (Demo)</h1>
+      <div class="muted">This is a mock dashboard for training/demo purposes. No real trading data is fetched.</div>
+
+      <div class="grid">
+        <div class="stat">
+          <div class="label">Starting Balance</div>
+          <div class="value" id="startBal">$ 100.00</div>
+        </div>
+        <div class="stat">
+          <div class="label">Current Balance</div>
+          <div class="value" id="currBal">$ 100.00</div>
+        </div>
+        <div class="stat">
+          <div class="label">Total P/L</div>
+          <div class="value" id="totalPL">$ 0.00</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label class="label">Asset</label>
+          <select id="asset">
+            <option>BTC</option>
+            <option>ETH</option>
+            <option>SOL</option>
+            <option>BNB</option>
+            <option>XRP</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Buy Price</label>
+          <input id="buy" type="number" step="0.01" placeholder="e.g. 42000" />
+        </div>
+        <div>
+          <label class="label">Sell Price</label>
+          <input id="sell" type="number" step="0.01" placeholder="e.g. 43000" />
+        </div>
+        <div>
+          <label class="label">Qty</label>
+          <input id="qty" type="number" step="0.0001" placeholder="e.g. 0.01" />
+        </div>
+      </div>
+
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button id="addTrade">Add Trade</button>
+        <button id="reset">Reset</button>
+      </div>
+
+      <div class="footerNote">
+        Tip: Use this only as a classroom UI. Do not use it to mislead anyone with fake results.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 6px; font-size:18px;">Trades</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Buy</th>
+            <th>Sell</th>
+            <th>Qty</th>
+            <th>P/L</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr>
+            <td colspan="5" class="muted">No trades added yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+  const startBalance = 100.00;
+  let balance = startBalance;
+  let trades = [];
+
+  const fmt = (n) => `$ ${Number(n).toFixed(2)}`;
+
+  function render(){
+    document.getElementById("startBal").innerText = fmt(startBalance);
+    document.getElementById("currBal").innerText = fmt(balance);
+
+    const totalPL = balance - startBalance;
+    document.getElementById("totalPL").innerText = fmt(totalPL);
+
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+
+    if(trades.length === 0){
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 5;
+      td.className = "muted";
+      td.innerText = "No trades added yet.";
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    trades.forEach(t => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${t.asset}</td>
+        <td>${t.buy}</td>
+        <td>${t.sell}</td>
+        <td>${t.qty}</td>
+        <td>${t.pl}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById("addTrade").addEventListener("click", () => {
+    const asset = document.getElementById("asset").value;
+    const buy = Number(document.getElementById("buy").value);
+    const sell = Number(document.getElementById("sell").value);
+    const qty = Number(document.getElementById("qty").value);
+
+    if(!buy || !sell || !qty){
+      alert("Please enter buy, sell and qty.");
+      return;
+    }
+
+    const pl = (sell - buy) * qty;
+    balance += pl;
+
+    trades.push({
+      asset,
+      buy: buy.toFixed(2),
+      sell: sell.toFixed(2),
+      qty: qty.toFixed(4),
+      pl: pl.toFixed(2)
+    });
+
+    document.getElementById("buy").value = "";
+    document.getElementById("sell").value = "";
+    document.getElementById("qty").value = "";
+
+    render();
+  });
+
+  document.getElementById("reset").addEventListener("click", () => {
+    balance = startBalance;
+    trades = [];
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
